@@ -32,13 +32,13 @@ We split the project into strict "Domains" instead of throwing everything into o
 *   **Key Decision (Raw vs. Aggregate):** A bad architecture would just save a new row every day saying `{"date": "Feb 22", "total_leads": 15}`. We chose to store the **raw individual leads** in a `leads_raw` table using UPSERTs. This allowed us to run powerful SQL queries (`SELECT count(*) WHERE lead_source = 'Google Ads' AND lead_status = 'Junk Lead'`) to calculate dynamic matrices on the fly. 
 
 ### 3. The Analytics Engine (SQL vs LLM)
-*   **The Challenge:** LLMs are incredibly bad at math. If you give Mistral 200 leads, it might miscount the conversion rate. 
+*   **The Challenge:** LLMs are incredibly bad at math. If you give Llama 3.2 200 leads, it might miscount the conversion rate. 
 *   **Our Solution:** We offloaded *all* mathematics to our SQL queries in [database_client.py](file:///g:/AHA%20Smart%20Homes%20Project%202/services/database_client.py). We wrote Python logic to create a `source_quality_matrix` and a `rep_pipeline_matrix`.
 *   **The Result:** By the time the data reaches the AI, the math (e.g., "Kushal has 191 leads and ₹0 pipeline") is already a hard fact. 
 
 ### 4. The Intelligence Layer ([ai_agents/analyst_agent.py](file:///g:/AHA%20Smart%20Homes%20Project%202/ai_agents/analyst_agent.py))
 *   **The Challenge:** We wanted to use AI, but we didn't want to expose sensitive CRM data to external servers (like OpenAI), and we didn't want the AI to write generic fluffy text.
-*   **Our Solution:** We used **Ollama** to run `Mistral 7B` locally. This costs $0 and ensures zero data leakage.
+*   **Our Solution:** We used **Ollama** to run `Llama 3.2` locally. This costs $0 and ensures zero data leakage.
 *   **Key Decision (Prompt Engineering):** We engineered a "Zero-Shot, Strict Persona" prompt. We explicitly banned the AI from using emojis in the Whatsapp report, banned it from using jargon, and forced it to output two specific formats via XML tags (`<DASHBOARD_REPORT>` and `<WHATSAPP_REPORT>`).
 
 ### 5. The Presentation Layer ([app.py](file:///g:/AHA%20Smart%20Homes%20Project%202/app.py))
@@ -49,7 +49,7 @@ We split the project into strict "Domains" instead of throwing everything into o
 ### 6. The Automation ([jobs/run_daily_sync.py](file:///g:/AHA%20Smart%20Homes%20Project%202/jobs/run_daily_sync.py) & Twilio)
 *   **The Challenge:** The CEO shouldn't have to log into a dashboard to know if something is wrong. They need proactive alerts.
 *   **Our Solution:** We wired up the **Twilio WhatsApp API** ([whatsapp_client.py](file:///g:/AHA%20Smart%20Homes%20Project%202/services/whatsapp_client.py)).
-*   **The Result:** The [run_daily_sync.py](file:///g:/AHA%20Smart%20Homes%20Project%202/jobs/run_daily_sync.py) file acts as the primary "Orchestrator." When it runs, it fetches Zoho data -> Upserts to Supabase -> Calculates SQL Analytics -> Prompts Mistral -> Parses the XML -> Updates the Dashboard DB -> and posts the `WHATSAPP_REPORT` string directly to the CEO's phone.
+*   **The Result:** The [run_daily_sync.py](file:///g:/AHA%20Smart%20Homes%20Project%202/jobs/run_daily_sync.py) file acts as the primary "Orchestrator." When it runs, it fetches Zoho data -> Upserts to Supabase -> Calculates SQL Analytics -> Prompts Llama 3.2 -> Parses the XML -> Updates the Dashboard DB -> and posts the `WHATSAPP_REPORT` string directly to the CEO's phone.
 
 ---
 
@@ -67,7 +67,7 @@ Throughout development, we hit several real-world roadblocks that you should hig
 
 **Challenge 3: Formatting for Different Mediums**
 *   *Issue:* The Dashboard required a deep, multi-paragraph analysis, but that exact same text looked terrible and overly long when blasted to a mobile WhatsApp screen.
-*   *Fix:* We implemented dual-prompting. We told Mistral to write two reports at once, separated by XML tags (`<DASHBOARD_REPORT>` and `<WHATSAPP_REPORT>`). We then used Python Regex (`re.search()`) to rip the outputs apart and route them to their respective destinations.
+*   *Fix:* We implemented dual-prompting. We told Llama 3.2 to write two reports at once, separated by XML tags (`<DASHBOARD_REPORT>` and `<WHATSAPP_REPORT>`). We then used Python Regex (`re.search()`) to rip the outputs apart and route them to their respective destinations.
 
 ---
 
@@ -80,9 +80,9 @@ You didn't just write a script; you built a scalable "product."
 2. It talks to Zoho, grabs exactly what changed in the last 24 hours.
 3. It pushes those changes to Supabase PostgreSQL.
 4. It calculates that "Google Ads has 0% junk but Walk-ins are dropping."
-5. It hands that math to Mistral running locally on your hardware.
-6. Mistral writes an executive summary.
+5. It hands that math to Llama 3.2 running locally on your hardware.
+6. Llama 3.2 writes an executive summary.
 7. The CEO's phone buzzes with a 5-bullet summary on WhatsApp.
-8. The CEO opens their laptop, navigates to the Streamlit Dashboard, and sees dynamic Bubble Charts and Stacked Bar charts proving exactly why Mistral said what it said.
+8. The CEO opens their laptop, navigates to the Streamlit Dashboard, and sees dynamic Bubble Charts and Stacked Bar charts proving exactly why Llama 3.2 said what it said.
 
 **If you explain this lifecycle—from data privacy choices to SQL math structuring—you will absolutely dominate your evaluation.**

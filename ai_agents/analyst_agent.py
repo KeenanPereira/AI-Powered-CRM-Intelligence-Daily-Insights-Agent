@@ -40,8 +40,12 @@ Always output exactly two sections clearly delimited by <DASHBOARD_REPORT> and <
 </DASHBOARD_REPORT>
 
 <WHATSAPP_REPORT>
-Provide a highly professional, systematic, and concise executive summary tailored for a mobile phone screen. Use structured bullet points. Focus purely on key metrics, critical business signals, and 1 clear action item.
-CRITICAL: NO emojis. NO informal language or slang. Do not use words like "drowning" or "punchy". Write strictly for a CEO and Management Team. Max 5-7 lines.
+Provide a concise executive summary for WhatsApp using ONLY flat bullet points (`-`).
+- Include 2-3 bullets summarizing yesterday's lead volume and pipeline value.
+- Include 1-2 bullets highlighting the top channels that drove leads yesterday.
+- End with exactly 2 bullets of recommended actions based on the daily anomaly.
+Do NOT add headings, sub-bullets, or extra text. Keep total output under 1400 characters.
+CRITICAL: NO emojis. NO informal language. Write strictly for a CEO.
 </WHATSAPP_REPORT>
 
 DATA:
@@ -49,7 +53,7 @@ DATA:
 """
     return prompt
 
-def get_executive_summary(payload: Dict[str, Any], model_name: str = "mistral", temperature: float = 0.0) -> Optional[str]:
+def get_executive_summary(payload: Dict[str, Any], model_name: str = "llama3.2", temperature: float = 0.0) -> Optional[str]:
     """
     Invokes the local LLM using a strict prompt engineering framework.
     Returns the string text of the report or None if execution fails.

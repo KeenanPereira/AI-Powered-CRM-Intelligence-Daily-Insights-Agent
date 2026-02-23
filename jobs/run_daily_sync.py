@@ -67,7 +67,7 @@ def run_daily_pipeline():
     payload = build_ai_payload()
     print("Payload ready for AI:\n", json.dumps(payload, indent=2))
         
-    print("\n🧠 Handing data to Mistral AI (Local Ollama)...")
+    print("\n🧠 Handing data to Llama 3.2 (Local Ollama)...")
     summary = get_executive_summary(payload)
         
     if summary:
@@ -84,13 +84,22 @@ def run_daily_pipeline():
         dashboard_report = dashboard_match.group(1).strip() if dashboard_match else summary.replace('<DASHBOARD_REPORT>', '').replace('</DASHBOARD_REPORT>', '').strip()
         whatsapp_report = whatsapp_match.group(1).strip() if whatsapp_match else dashboard_report # Fallback to cleaned dashboard report if no tags
         
-        # Clean stray tags if Mistral malformed them
+        # Clean stray tags if Llama 3.2 malformed them
         whatsapp_report = re.sub(r'</?(DASHBOARD|WHATSAPP)_REPORT>', '', whatsapp_report).strip()
         
         # Save to Cloud DB instead of local text file using the dashboard format
         database_client.log_ai_briefing(dashboard_report)
         print("✅ Dashboard Briefing securely logged to Supabase ai_briefings_log table.")
         
+        # Hard cap at 1500 chars — Twilio WhatsApp limit is 1600
+        MAX_WA_CHARS = 1500
+        if len(whatsapp_report) > MAX_WA_CHARS:
+            # Truncate cleanly at the last newline before the limit
+            truncated = whatsapp_report[:MAX_WA_CHARS]
+            last_newline = truncated.rfind('\n')
+            whatsapp_report = truncated[:last_newline] if last_newline > 0 else truncated
+            whatsapp_report += "\n\n_(Report truncated to fit WhatsApp limit.)_"
+
         # Dispatch to CEO via WhatsApp using the mobile format
         print("\n📱 Dispatching AI Briefing to WhatsApp...")
         success = send_whatsapp_message(whatsapp_report)

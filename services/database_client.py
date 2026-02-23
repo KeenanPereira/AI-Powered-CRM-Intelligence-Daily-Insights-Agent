@@ -361,3 +361,28 @@ def get_briefing_by_date(report_date: str):
     if res.data:
         return res.data[0]['markdown_content']
     return None
+
+def get_pipeline_period_stats():
+    """
+    Returns lead and pipeline value totals for today, this week, and this month.
+    Used to power the daily/weekly/monthly metrics strip on the Overview tab.
+    """
+    now = datetime.now()
+    today_start     = now.strftime("%Y-%m-%dT00:00:00")
+    week_start      = (now - timedelta(days=now.weekday())).strftime("%Y-%m-%dT00:00:00")
+    month_start     = now.strftime("%Y-%m-01T00:00:00")
+
+    stats = {}
+
+    # --- Lead counts ---
+    for label, since in [("today", today_start), ("week", week_start), ("month", month_start)]:
+        r = supabase.table("leads_raw").select("*", count="exact").gte("created_time", since).execute()
+        stats[f"leads_{label}"] = r.count or 0
+
+    # --- Pipeline value (open deals) created in each period ---
+    for label, since in [("today", today_start), ("week", week_start), ("month", month_start)]:
+        r = supabase.table("crm_deals").select("amount,stage").gte("created_time", since).neq("stage", "Closed Lost").execute()
+        stats[f"pipeline_{label}"] = round(sum(row["amount"] or 0 for row in r.data))
+
+    return stats
+

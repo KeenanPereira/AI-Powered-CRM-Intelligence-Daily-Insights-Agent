@@ -23,7 +23,7 @@ A fully automated, production-grade CRM intelligence system that pulls **all dat
            │  SQL Funnel Analytics           │  AI Payload
            ▼                                 ▼
 ┌──────────────────────┐       ┌────────────────────────────────┐
-│   Streamlit Dashboard│       │   Mistral 7B (Local Ollama)    │
+│   Streamlit Dashboard│       │   Llama 3.2 (Local Ollama)     │
 │   5 Tabs · 15+ Charts│       │   100% Private · $0 Cost       │
 └──────────────────────┘       └────────────────┬───────────────┘
                                                  │ Executive Briefing
@@ -53,7 +53,7 @@ AHA Smart Homes Project 2/
 │
 ├── ai_agents/
 │   ├── __init__.py
-│   └── analyst_agent.py         # Dual-report Mistral prompt (Dashboard + WhatsApp)
+│   └── analyst_agent.py         # Dual-report Llama prompt (Dashboard + WhatsApp)
 │
 ├── jobs/
 │   ├── __init__.py
@@ -71,7 +71,7 @@ AHA Smart Homes Project 2/
 
 ### Prerequisites
 - Python 3.10+
-- [Ollama](https://ollama.ai/) with `mistral` or `llama3.2` pulled locally
+- [Ollama](https://ollama.ai/) with `llama3.2` pulled locally
 - A Zoho CRM account with API credentials (OAuth 2.0 Self-Client)
 - A Supabase project
 - A Twilio account with WhatsApp Sandbox enabled (optional)
@@ -120,7 +120,7 @@ This creates 6 tables:
 
 ### 4. Pull the AI Model
 ```bash
-ollama pull mistral
+ollama pull llama3.2
 ```
 
 ---
@@ -192,7 +192,7 @@ Instead of rigid column schemas that break whenever Zoho adds a new field, we us
 |---|---|
 | CRM Source | Zoho CRM API v2 (OAuth 2.0) |
 | Database | Supabase (PostgreSQL + JSONB) |
-| AI / LLM | Mistral 7B via Ollama (LangChain) — 100% local |
+| AI / LLM | Llama 3.2 via Ollama (LangChain) — 100% local |
 | Dashboard | Streamlit + Plotly Express |
 | Notifications | Twilio WhatsApp API |
 | Language | Python 3.10+ |
@@ -209,7 +209,7 @@ Using `raw_data JSONB` means the database is future-proof. If a manager adds 50 
 All funnel calculations (conversion rates, junk %, pipeline value) are done in PostgreSQL before touching the LLM — eliminating all risk of AI hallucination on numbers.
 
 ### 3. Local LLM vs. Cloud API
-Mistral 7B runs on-device via Ollama — ensuring **zero data leaves the building** and generating reports at **₹0 cost per run**.
+Llama 3.2 runs on-device via Ollama — ensuring **zero data leaves the building** and generating reports at **₹0 cost per run**.
 
 ### 4. Incremental Sync vs. Full Refresh
 Using the `If-Modified-Since` HTTP header means only records **changed since the last sync** are downloaded, keeping the daily job fast regardless of CRM size.
