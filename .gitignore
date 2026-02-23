@@ -1,0 +1,30 @@
+# Python artifacts
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+venv/
+env/
+*.egg-info/
+build/
+dist/
+
+# VSCode settings
+.vscode/
+
+# Environment files – keep secrets out of version control
+.env
+.env.*
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Streamlit cache & config
+.streamlit/
+
+# Log files
+*.log
+
+# Jupyter notebook checkpoints
+.ipynb_checkpoints/
