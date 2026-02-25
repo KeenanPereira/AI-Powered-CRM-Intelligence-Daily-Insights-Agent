@@ -58,8 +58,3 @@ def fetch_incremental_module(access_token, module_name="Leads", last_sync_iso=No
         print(response.text)
         return []
 
-if __name__ == "__main__":
-    token = get_access_token()
-    if token:
-        leads = fetch_incremental_leads(token, None)
-        print(f"Test fetch complete. Retrieved {len(leads)} records.")
