@@ -101,263 +101,66 @@ def get_last_sync_time():
 
 def get_advanced_analytics(target_date_iso=None):
     """
-    Calculate granular Funnel Metrics by querying Supabase.
+    Calculate granular Funnel Metrics by querying Supabase RPC.
     """
     if not target_date_iso:
         target_date_iso = datetime.now().strftime("%Y-%m-%d")
-        
-    target_start = f"{target_date_iso}T00:00:00"
-    target_end = f"{target_date_iso}T23:59:59"
     
-    target_date_obj = datetime.strptime(target_date_iso, "%Y-%m-%d")
-    seven_days_ago_start = (target_date_obj - timedelta(days=7)).strftime("%Y-%m-%dT00:00:00")
-    
-    results = {}
-    
-    # 1. New Leads Generated Today vs 7-Day Average
-    res_today = supabase.table("leads_raw").select("*", count="exact").gte("created_time", target_start).lte("created_time", target_end).execute()
-    results['new_leads_today'] = res_today.count if res_today.count is not None else 0
-    
-    res_7d = supabase.table("leads_raw").select("*", count="exact").gte("created_time", seven_days_ago_start).lt("created_time", target_start).execute()
-    seven_day_total = res_7d.count if res_7d.count is not None else 0
-    results['seven_day_avg'] = round(seven_day_total / 7) if seven_day_total else 0
-    
-    if results['seven_day_avg'] == 0:
-        results['percent_change_leads'] = "0%"
-    else:
-        change = ((results['new_leads_today'] - results['seven_day_avg']) / results['seven_day_avg']) * 100
-        sign = "+" if change > 0 else ""
-        results['percent_change_leads'] = f"{sign}{round(change)}%"
-
-    # 2. Unified Conversion Funnel (Leads + Deals)
-    # We query both tables to build a massive top-to-bottom pipeline.
-    res_leads = supabase.table("leads_raw").select("lead_status").execute()
-    res_deals = supabase.table("crm_deals").select("stage").execute()
-    
-    funnel = {}
-    for row in res_leads.data:
-        st = row['lead_status']
-        funnel[st] = funnel.get(st, 0) + 1
-        
-    for row in res_deals.data:
-        st = row['stage']
-        funnel[st] = funnel.get(st, 0) + 1
-        
-    results['pipeline_statuses'] = funnel
-    
-    # 3. Source Breakdown for Today (Leads + Deals)
-    res_src_leads = supabase.table("leads_raw").select("lead_source").gte("created_time", target_start).lte("created_time", target_end).execute()
-    res_src_deals = supabase.table("crm_deals").select("source").gte("created_time", target_start).lte("created_time", target_end).execute()
-    
-    sources = {}
-    for row in res_src_leads.data:
-        src = row.get('lead_source', 'Unknown')
-        sources[src] = sources.get(src, 0) + 1
-    for row in res_src_deals.data:
-        src = row.get('source', 'Unknown')
-        sources[src] = sources.get(src, 0) + 1
-        
-    results['source_breakdown'] = sources
-    
-    # 4. Pipeline Value (Driven by Deals table for absolute accuracy)
-    # We ignore leads for this because Deal tracking is strictly monetary.
-    res_revenue = supabase.table("crm_deals").select("amount,stage").neq("stage", "Closed Lost").execute()
-    total_val = sum([row['amount'] for row in res_revenue.data if row['amount']])
-            
-    results['pipeline_value'] = round(total_val)
-    
-    # 5. The "Source Quality Matrix" (Volume vs Pipeline Quality)
-    res_quality = supabase.table("leads_raw").select("lead_source,lead_status").gte("created_time", target_start).lte("created_time", target_end).execute()
-    quality_matrix = {}
-    for row in res_quality.data:
-        src = row['lead_source']
-        status = row['lead_status']
-        if src not in quality_matrix:
-            quality_matrix[src] = {"total_leads": 0, "junk_or_unqualified": 0, "in_pipeline": 0}
-            
-        quality_matrix[src]["total_leads"] += 1
-        if status in ["Junk Lead", "Not Qualified"]:
-            quality_matrix[src]["junk_or_unqualified"] += 1
-        else:
-            quality_matrix[src]["in_pipeline"] += 1
-    
-    # Calculate % Junk for each source
-    for src, metrics in quality_matrix.items():
-        metrics["junk_percentage"] = f"{round((metrics['junk_or_unqualified'] / metrics['total_leads']) * 100)}%"
-        
-    results['source_quality_matrix'] = quality_matrix
-    
-    # 6. Sales Rep Pipeline Holdings (From Deals)
-    res_reps = supabase.table("crm_deals").select("owner,amount,stage").neq("stage", "Closed Lost").execute()
-    reps_matrix = {}
-    for row in res_reps.data:
-        rep = row['owner']
-        rev = row['amount'] or 0
-        if rep not in reps_matrix:
-            reps_matrix[rep] = {"active_leads": 0, "total_pipeline_value": 0}
-            
-        reps_matrix[rep]["active_leads"] += 1
-        reps_matrix[rep]["total_pipeline_value"] += rev
-        
-    # Merge lead counts so reps with no deals but many leads still show up
-    res_reps_leads = supabase.table("leads_raw").select("owner").execute()
-    for row in res_reps_leads.data:
-        rep = row['owner']
-        if rep not in reps_matrix:
-            reps_matrix[rep] = {"active_leads": 0, "total_pipeline_value": 0}
-        reps_matrix[rep]["active_leads"] += 1
-        
-    results['rep_pipeline_matrix'] = reps_matrix
-    
-    return results
+    r = supabase.rpc("get_advanced_analytics", {"target_date_iso": target_date_iso}).execute()
+    return r.data if r.data else {}
 
 # ─────────────────────────────────────────────────────────────
-# PHASE 12: COMPREHENSIVE ANALYTICS — ALL TABLES
+# PHASE 12: COMPREHENSIVE ANALYTICS — ALL TABLES 
+# (NOW POWERED BY POSTGRESQL NATIVE COMPUTATION)
 # ─────────────────────────────────────────────────────────────
 
 def get_overview_kpis():
-    """Returns high-level KPI counts for the Overview tab."""
-    kpis = {}
-    # Total leads
-    r = supabase.table("leads_raw").select("*", count="exact").execute()
-    kpis['total_leads'] = r.count or 0
-    # Total deals
-    r = supabase.table("crm_deals").select("*", count="exact").execute()
-    kpis['total_deals'] = r.count or 0
-    # Total contacts
-    r = supabase.table("crm_contacts").select("*", count="exact").execute()
-    kpis['total_contacts'] = r.count or 0
-    # Total accounts
-    r = supabase.table("crm_accounts").select("*", count="exact").execute()
-    kpis['total_accounts'] = r.count or 0
-    # Open pipeline value (not Closed Lost)
-    r = supabase.table("crm_deals").select("amount,stage").neq("stage", "Closed Lost").execute()
-    kpis['open_pipeline_value'] = round(sum(row['amount'] or 0 for row in r.data))
-    # Closed Won value
-    r = supabase.table("crm_deals").select("amount,stage").eq("stage", "Closed Won").execute()
-    kpis['closed_won_value'] = round(sum(row['amount'] or 0 for row in r.data))
-    # Closed Won deal count
-    kpis['closed_won_deals'] = len(r.data)
-    # Junk % from leads
-    r_all = supabase.table("leads_raw").select("lead_status").execute()
-    all_statuses = [row['lead_status'] for row in r_all.data]
-    total = len(all_statuses)
-    junk = sum(1 for s in all_statuses if s in ["Junk Lead", "Not Qualified", "Not Qualified Lead"])
-    kpis['junk_pct'] = round((junk / total) * 100) if total > 0 else 0
-    return kpis
+    r = supabase.rpc("get_overview_kpis").execute()
+    return r.data if r.data else {}
+
+def get_pipeline_period_stats():
+    r = supabase.rpc("get_pipeline_period_stats").execute()
+    return r.data if r.data else {}
 
 def get_lead_volume_trend(days: int = 30):
-    """Returns daily new lead counts over the last N days for a trend line chart."""
-    since = (datetime.now() - timedelta(days=days)).strftime("%Y-%m-%dT00:00:00")
-    r = supabase.table("leads_raw").select("created_time").gte("created_time", since).execute()
-    daily_counts = {}
-    for row in r.data:
-        ct = row.get('created_time', '')
-        if ct:
-            day = ct[:10]  # "YYYY-MM-DD"
-            daily_counts[day] = daily_counts.get(day, 0) + 1
-    return daily_counts
+    r = supabase.rpc("get_lead_volume_trend", {"days": days}).execute()
+    return r.data if r.data else {}
 
 def get_lead_status_breakdown():
-    """Returns count of leads per status (all-time)."""
-    r = supabase.table("leads_raw").select("lead_status").execute()
-    counts = {}
-    for row in r.data:
-        s = row['lead_status'] or 'Unknown'
-        counts[s] = counts.get(s, 0) + 1
-    return counts
-
-def get_source_quality_all_time():
-    """Returns source quality matrix (junk vs pipeline) for ALL TIME, not just today."""
-    r = supabase.table("leads_raw").select("lead_source,lead_status").execute()
-    matrix = {}
-    for row in r.data:
-        src = row['lead_source'] or 'Unknown'
-        status = row['lead_status'] or 'Unknown'
-        if src not in matrix:
-            matrix[src] = {"total_leads": 0, "junk_or_unqualified": 0, "in_pipeline": 0}
-        matrix[src]["total_leads"] += 1
-        if status in ["Junk Lead", "Not Qualified", "Not Qualified Lead"]:
-            matrix[src]["junk_or_unqualified"] += 1
-        else:
-            matrix[src]["in_pipeline"] += 1
-    for src, m in matrix.items():
-        m["junk_pct"] = round((m['junk_or_unqualified'] / m['total_leads']) * 100) if m['total_leads'] > 0 else 0
-    return matrix
+    r = supabase.rpc("get_lead_status_breakdown").execute()
+    return r.data if r.data else {}
 
 def get_owner_lead_distribution():
-    """Returns lead count per owner/sales rep (all-time)."""
-    r = supabase.table("leads_raw").select("owner").execute()
-    counts = {}
-    for row in r.data:
-        o = row['owner'] or 'Unassigned'
-        counts[o] = counts.get(o, 0) + 1
-    return counts
+    r = supabase.rpc("get_owner_lead_distribution").execute()
+    return r.data if r.data else {}
 
 def get_deal_stage_breakdown():
-    """Returns deal count and total value per stage."""
-    r = supabase.table("crm_deals").select("stage,amount").execute()
-    stages = {}
-    for row in r.data:
-        s = row['stage'] or 'Unknown'
-        if s not in stages:
-            stages[s] = {"count": 0, "value": 0}
-        stages[s]["count"] += 1
-        stages[s]["value"] += row['amount'] or 0
-    return stages
+    r = supabase.rpc("get_deal_stage_breakdown").execute()
+    return r.data if r.data else {}
 
 def get_deal_value_by_owner():
-    """Returns total deal value (open + won) per owner."""
-    r = supabase.table("crm_deals").select("owner,amount,stage").execute()
-    by_owner = {}
-    for row in r.data:
-        o = row['owner'] or 'Unassigned'
-        if o not in by_owner:
-            by_owner[o] = {"open_value": 0, "won_value": 0, "deal_count": 0}
-        by_owner[o]["deal_count"] += 1
-        if row['stage'] == "Closed Won":
-            by_owner[o]["won_value"] += row['amount'] or 0
-        elif row['stage'] != "Closed Lost":
-            by_owner[o]["open_value"] += row['amount'] or 0
-    return by_owner
+    r = supabase.rpc("get_deal_value_by_owner").execute()
+    return r.data if r.data else {}
 
 def get_deals_closing_soon(days: int = 30):
-    """Returns deals whose closing date is within the next N days."""
-    today_str = datetime.now().strftime("%Y-%m-%d")
-    future_str = (datetime.now() + timedelta(days=days)).strftime("%Y-%m-%d")
-    r = supabase.table("crm_deals").select("deal_name,stage,amount,owner,closed_time").gte("closed_time", today_str).lte("closed_time", future_str).neq("stage", "Closed Lost").neq("stage", "Closed Won").order("closed_time").execute()
-    return r.data
+    r = supabase.rpc("get_deals_closing_soon", {"days": days}).execute()
+    return r.data if r.data else []
 
 def get_won_vs_lost():
-    """Returns count and total ₹ for Closed Won vs Closed Lost deals."""
-    r = supabase.table("crm_deals").select("stage,amount").execute()
-    won_count, lost_count, won_val, lost_val = 0, 0, 0, 0
-    for row in r.data:
-        if row['stage'] == "Closed Won":
-            won_count += 1
-            won_val += row['amount'] or 0
-        elif row['stage'] == "Closed Lost":
-            lost_count += 1
-            lost_val += row['amount'] or 0
-    return {"won_count": won_count, "lost_count": lost_count, "won_value": round(won_val), "lost_value": round(lost_val)}
+    r = supabase.rpc("get_won_vs_lost").execute()
+    return r.data if r.data else {}
 
 def get_contact_owner_distribution():
-    """Returns contact count per owner."""
-    r = supabase.table("crm_contacts").select("owner").execute()
-    counts = {}
-    for row in r.data:
-        o = row['owner'] or 'Unassigned'
-        counts[o] = counts.get(o, 0) + 1
-    return counts
+    r = supabase.rpc("get_contact_and_account_breakdown").execute()
+    return r.data.get("contact_owners", {}) if r.data else {}
 
 def get_account_industry_breakdown():
-    """Returns account count per industry."""
-    r = supabase.table("crm_accounts").select("industry").execute()
-    counts = {}
-    for row in r.data:
-        ind = row['industry'] or 'Unknown'
-        counts[ind] = counts.get(ind, 0) + 1
-    return counts
+    r = supabase.rpc("get_contact_and_account_breakdown").execute()
+    return r.data.get("industries", {}) if r.data else {}
+
+def get_source_quality_all_time():
+    r = supabase.rpc("get_source_quality_all_time").execute()
+    return r.data if r.data else {}
 
 def get_sync_history(limit: int = 10):
     """Returns last N sync log records for the System Health tab."""
@@ -392,28 +195,3 @@ def get_briefing_by_date(report_date: str):
     if res.data:
         return res.data[0]['markdown_content']
     return None
-
-def get_pipeline_period_stats():
-    """
-    Returns lead and pipeline value totals for today, this week, and this month.
-    Used to power the daily/weekly/monthly metrics strip on the Overview tab.
-    """
-    now = datetime.now()
-    today_start     = now.strftime("%Y-%m-%dT00:00:00")
-    week_start      = (now - timedelta(days=now.weekday())).strftime("%Y-%m-%dT00:00:00")
-    month_start     = now.strftime("%Y-%m-01T00:00:00")
-
-    stats = {}
-
-    # --- Lead counts ---
-    for label, since in [("today", today_start), ("week", week_start), ("month", month_start)]:
-        r = supabase.table("leads_raw").select("*", count="exact").gte("created_time", since).execute()
-        stats[f"leads_{label}"] = r.count or 0
-
-    # --- Pipeline value (open deals) created in each period ---
-    for label, since in [("today", today_start), ("week", week_start), ("month", month_start)]:
-        r = supabase.table("crm_deals").select("amount,stage").gte("created_time", since).neq("stage", "Closed Lost").execute()
-        stats[f"pipeline_{label}"] = round(sum(row["amount"] or 0 for row in r.data))
-
-    return stats
-
