@@ -13,6 +13,94 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# ─── Custom Premium UI Styling ───────────────────────────────────────────────
+st.markdown("""
+<style>
+/* Modern Font Injection */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+html, body, [class*="css"]  {
+    font-family: 'Inter', sans-serif !important;
+}
+
+/* Glassmorphism KPI Hover Cards */
+div[data-testid="metric-container"] {
+    background: rgba(30, 30, 34, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 20px 24px;
+    border-radius: 16px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+div[data-testid="metric-container"]:hover {
+    transform: translateY(-5px);
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 12px 24px rgba(0,0,0,0.3);
+}
+
+/* Customizing the Metric Labels & Values for High Contrast */
+div[data-testid="stMetricLabel"] {
+    font-size: 14px;
+    color: #9CA3AF;
+    font-weight: 500;
+}
+div[data-testid="stMetricValue"] {
+    font-size: 32px;
+    font-weight: 700;
+    color: #F9FAFB;
+    margin-top: 5px;
+}
+
+/* Tab Styling - Modern & Clean */
+[data-baseweb="tab-list"] {
+    gap: 8px;
+    background-color: rgba(0, 0, 0, 0.1);
+    padding: 8px;
+    border-radius: 12px;
+}
+[data-baseweb="tab"] {
+    border-radius: 8px !important;
+    padding: 10px 20px !important;
+    color: #9CA3AF !important;
+    font-weight: 500;
+    border: none !important;
+    background-color: transparent !important;
+    transition: all 0.2s ease;
+}
+[data-baseweb="tab"]:hover {
+    color: #E5E7EB !important;
+    background-color: rgba(255, 255, 255, 0.05) !important;
+}
+[data-baseweb="tab"][aria-selected="true"] {
+    color: #FFFFFF !important;
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
+}
+
+/* Hide Default Streamlit Branding & Top Padding */
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
+div.block-container {
+    padding-top: 2rem;
+}
+
+/* Subtle glowing dividers */
+hr {
+    border: none;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0) 100%);
+    margin: 30px 0;
+}
+</style>
+""", unsafe_allow_html=True)
+
+import plotly.io as pio
+pio.templates.default = "plotly_dark"
+# End of UI Styling
+
 # ─── Sidebar: Date Filters & Info ────────────────────────────────────────────
 with st.sidebar:
     st.title("🏠 AHA Smart Homes")

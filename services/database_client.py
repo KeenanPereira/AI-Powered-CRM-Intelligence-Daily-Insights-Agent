@@ -1,6 +1,37 @@
 from supabase import create_client, Client
 from datetime import datetime, timedelta
 from core.config import Config
+import socket
+import urllib.request
+import json
+import logging
+
+def _bypass_isp_dns_block():
+    """
+    Reliance Jio often blocks .co domains by hijacking system DNS.
+    This dynamically asks Google's DNS for the real Cloudflare/AWS IP
+    and patches Python's core socket to force connection, bypassing Jio.
+    """
+    try:
+        host = "elrbabblikqjovunqlar.supabase.co"
+        url = f"https://dns.google/resolve?name={host}"
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req) as response:
+            data = json.loads(response.read().decode())
+            ips = [a['data'] for a in data.get('Answer', []) if a['type'] == 1]
+            if ips:
+                real_ip = ips[0]
+                _orig_getaddrinfo = socket.getaddrinfo
+                def _custom_getaddrinfo(h, port, family=0, type=0, proto=0, flags=0):
+                    if h == host:
+                        return _orig_getaddrinfo(real_ip, port, family, type, proto, flags)
+                    return _orig_getaddrinfo(h, port, family, type, proto, flags)
+                socket.getaddrinfo = _custom_getaddrinfo
+                logging.info(f"🛡️ DNS Patch Active: Bypassing ISP Block for Supabase ({real_ip})")
+    except Exception as e:
+        logging.warning(f"Failed to apply DNS patch: {e}")
+
+_bypass_isp_dns_block()
 
 supabase: Client = create_client(Config.SUPABASE_URL, Config.SUPABASE_KEY)
 

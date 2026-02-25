@@ -32,6 +32,27 @@ def build_ai_payload():
         "Historical database initialized. Incremental syncs logic tracking active."
       ]
     }
+    
+    # --- HARDCODED AI INSIGHT GENERATION (NO MATH REQUIRED BY LLM) ---
+    rep_matrix = final_payload.get('rep_pipeline_matrix', {})
+    for rep, data in rep_matrix.items():
+        leads = data.get('active_leads', 0)
+        pipe = data.get('total_pipeline_value', 0)
+        # Identify overloaded reps (High lead volume, zero or very low pipeline value)
+        if leads > 100 and pipe < 5000000:
+            final_payload["anomalies_detected_by_math"].append(
+                f"CRITICAL BOTTLENECK: {rep} is OVERLOADED. They have {leads} active leads but only ₹{pipe:,} in pipeline. "
+                f"Recommendation: Immediately pause giving {rep} new leads and re-assign their existing pool."
+            )
+            
+    source_matrix = final_payload.get('source_quality_matrix', {})
+    for source, data in source_matrix.items():
+        if data.get('junk_percentage') == '100%' and data.get('total_leads', 0) > 5:
+            final_payload["anomalies_detected_by_math"].append(
+                f"TOXIC CHANNEL: '{source}' generated {data.get('total_leads')} leads and 100% were JUNK. "
+                "Recommendation: Shut this campaign off immediately."
+            )
+
     return final_payload
 
 def run_daily_pipeline():
