@@ -40,24 +40,23 @@ Always output exactly two sections clearly delimited by <DASHBOARD_REPORT> and <
 </DASHBOARD_REPORT>
 
 <WHATSAPP_REPORT>
-Provide a hard-hitting executive summary carefully formatted for WhatsApp. Do NOT use markdown headers like `###` as they do not render well on WhatsApp. Instead, use WhatsApp bolding (`*Text*`) for section headers.
-Structure the summary EXACTLY as follows:
+Generate a hard-hitting executive summary carefully formatted for WhatsApp.
+CRITICAL ENFORCEMENT RULES:
+1. DO NOT use markdown headers (`###`) or bolding (`**` or `*`).
+2. YOU MUST format the output EXACTLY like the template below, using the same emojis and bullet points:
 
-*1. The Daily Pulse*
-- Yesterday's lead volume was [X], a [+/-X%] change from the 7-day average.
-- New pipeline generated today is ₹[X], bringing total open pipeline to ₹[X].
-- Total Closed Won stands at [X] deals (₹[X]), and Closed Lost stands at [X] deals (₹[X]).
+📊 Daily CRM Summary – [Month Day]
+• New Leads: [X] ([+/-X%] vs avg)
+• Pipeline Generated: ₹[X]
+• Deals Closed: ₹[X]
 
-*2. Deep Dive Diagnostics*
-- [Bullet summarizing critical rep overload with exact active leads and pipeline value, e.g. *OVERLOADED* rep:]
-- [Bullet summarizing toxic channel with exact junk percentage]
+⚠️ Signals:
+– [Write 1 concise bullet about overloaded rep/toxic channel anomaly with exact numbers]
+– [Write 1 concise bullet about any other anomaly or pacing drop]
 
-*3. Immediate Execution*
-- [Action 1 based on the data]
-- [Action 2 based on the data]
-- [Action 3 based on the data]
-
-CRITICAL RULES: Use `*` for bold text in WhatsApp. NO emojis. NO informal language. Write strictly for a CEO. Keep total output under 1400 characters. Incorporate exact numbers from the payload.
+👉 Focus:
+– [Write 1 actionable step based on the data]
+– [Write 1 actionable step based on the data]
 </WHATSAPP_REPORT>
 
 DATA:

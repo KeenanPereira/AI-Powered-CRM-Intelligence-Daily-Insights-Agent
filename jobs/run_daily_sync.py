@@ -112,12 +112,19 @@ def run_daily_pipeline():
         print("========================================\n")
         
         import re
-        dashboard_match = re.search(r'<DASHBOARD_REPORT>\s*(.*?)\s*</DASHBOARD_REPORT>', summary, re.DOTALL | re.IGNORECASE)
-        whatsapp_match = re.search(r'<WHATSAPP_REPORT>\s*(.*?)\s*</WHATSAPP_REPORT>', summary, re.DOTALL | re.IGNORECASE)
+        dashboard_match = re.search(r'<DASHBOARD_REPORT>\s*(.*?)\s*(?:</DASHBOARD_REPORT>|<WHATSAPP_REPORT>|$)', summary, re.DOTALL | re.IGNORECASE)
+        whatsapp_match = re.search(r'<WHATSAPP_REPORT>\s*(.*?)\s*(?:</WHATSAPP_REPORT>|$)', summary, re.DOTALL | re.IGNORECASE)
         
         dashboard_report = dashboard_match.group(1).strip() if dashboard_match else summary.replace('<DASHBOARD_REPORT>', '').replace('</DASHBOARD_REPORT>', '').strip()
-        whatsapp_report = whatsapp_match.group(1).strip() if whatsapp_match else dashboard_report # Fallback to cleaned dashboard report if no tags
         
+        # Priority: Exact match -> Extract anything after tag -> Fallback to dashboard
+        if whatsapp_match:
+            whatsapp_report = whatsapp_match.group(1).strip()
+        elif "<WHATSAPP_REPORT>" in summary:
+            whatsapp_report = summary.split("<WHATSAPP_REPORT>")[-1].replace("</WHATSAPP_REPORT>", "").strip()
+        else:
+            whatsapp_report = dashboard_report
+            
         # Clean stray tags if Llama 3.2 malformed them
         whatsapp_report = re.sub(r'</?(DASHBOARD|WHATSAPP)_REPORT>', '', whatsapp_report).strip()
         
