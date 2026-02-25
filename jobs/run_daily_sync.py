@@ -15,6 +15,8 @@ def build_ai_payload():
     
     # Get True Analytics from Raw CRM Database
     analytics = database_client.get_advanced_analytics(today)
+    period_stats = database_client.get_pipeline_period_stats()
+    won_lost = database_client.get_won_vs_lost()
     
     final_payload = {
       "report_date": today,
@@ -22,7 +24,12 @@ def build_ai_payload():
         "new_leads_yesterday": analytics['new_leads_today'],
         "seven_day_lead_average": analytics['seven_day_avg'],
         "percent_change_leads": analytics['percent_change_leads'],
-        "pipeline_value": f"₹{analytics['pipeline_value']:,}"
+        "total_open_pipeline_value": f"₹{analytics.get('pipeline_value', 0):,}",
+        "pipeline_generated_today": f"₹{period_stats.get('pipeline_today', 0):,}",
+        "closed_won_deals_total": won_lost.get('won_count', 0),
+        "closed_won_value_total": f"₹{won_lost.get('won_value', 0):,}",
+        "closed_lost_deals_total": won_lost.get('lost_count', 0),
+        "closed_lost_value_total": f"₹{won_lost.get('lost_value', 0):,}"
       },
       "pipeline_funnel": analytics['pipeline_statuses'],
       "source_breakdown": analytics.get('source_breakdown', {}),
@@ -47,10 +54,16 @@ def build_ai_payload():
             
     source_matrix = final_payload.get('source_quality_matrix', {})
     for source, data in source_matrix.items():
-        if data.get('junk_percentage') == '100%' and data.get('total_leads', 0) > 5:
+        junk_pct_str = data.get('junk_pct', '0%')
+        try:
+            junk_pct = float(junk_pct_str.replace('%', ''))
+        except (ValueError, AttributeError):
+            junk_pct = 0
+            
+        if junk_pct >= 30 and data.get('total_leads', 0) > 5:
             final_payload["anomalies_detected_by_math"].append(
-                f"TOXIC CHANNEL: '{source}' generated {data.get('total_leads')} leads and 100% were JUNK. "
-                "Recommendation: Shut this campaign off immediately."
+                f"TOXIC/UNDERPERFORMING CHANNEL: '{source}' generated {data.get('total_leads')} leads and {junk_pct_str} were JUNK. "
+                "Recommendation: Review and heavily optimize this channel's targeting immediately."
             )
 
     return final_payload

@@ -40,11 +40,24 @@ Always output exactly two sections clearly delimited by <DASHBOARD_REPORT> and <
 </DASHBOARD_REPORT>
 
 <WHATSAPP_REPORT>
-Provide a concise, hard-hitting executive summary for WhatsApp using ONLY flat bullet points (`-`). DO NOT use bold text or headers.
-- Include 1-2 bullets summarizing yesterday's specific lead volume and pipeline changes.
-- Include 1-2 bullets summarizing the most critical anomaly (e.g., specific overloaded sales rep or 100% junk channel).
-- End with 1-2 explicit, data-backed recommended actions for today.
-CRITICAL: NO emojis. NO informal language. Write strictly for a CEO. Keep total output under 1400 characters.
+Provide a hard-hitting executive summary carefully formatted for WhatsApp. Do NOT use markdown headers like `###` as they do not render well on WhatsApp. Instead, use WhatsApp bolding (`*Text*`) for section headers.
+Structure the summary EXACTLY as follows:
+
+*1. The Daily Pulse*
+- Yesterday's lead volume was [X], a [+/-X%] change from the 7-day average.
+- New pipeline generated today is ₹[X], bringing total open pipeline to ₹[X].
+- Total Closed Won stands at [X] deals (₹[X]), and Closed Lost stands at [X] deals (₹[X]).
+
+*2. Deep Dive Diagnostics*
+- [Bullet summarizing critical rep overload with exact active leads and pipeline value, e.g. *OVERLOADED* rep:]
+- [Bullet summarizing toxic channel with exact junk percentage]
+
+*3. Immediate Execution*
+- [Action 1 based on the data]
+- [Action 2 based on the data]
+- [Action 3 based on the data]
+
+CRITICAL RULES: Use `*` for bold text in WhatsApp. NO emojis. NO informal language. Write strictly for a CEO. Keep total output under 1400 characters. Incorporate exact numbers from the payload.
 </WHATSAPP_REPORT>
 
 DATA:
@@ -52,7 +65,7 @@ DATA:
 """
     return prompt
 
-def get_executive_summary(payload: Dict[str, Any], model_name: str = "llama3.2", temperature: float = 0.0) -> Optional[str]:
+def get_executive_summary(payload: Dict[str, Any], model_name: str = "llama3.2", temperature: float = 0.3) -> Optional[str]:
     """
     Invokes the local LLM using a strict prompt engineering framework.
     Returns the string text of the report or None if execution fails.

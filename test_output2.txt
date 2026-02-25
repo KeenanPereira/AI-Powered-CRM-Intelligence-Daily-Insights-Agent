@@ -1,0 +1,131 @@
+Building Payload...
+{
+  "report_date": "2026-02-25",
+  "daily_metrics": {
+    "new_leads_yesterday": 23,
+    "seven_day_lead_average": 19,
+    "percent_change_leads": "+21%",
+    "total_open_pipeline_value": "\u20b982,862,240",
+    "pipeline_generated_today": "\u20b9659,800",
+    "closed_won_deals_total": 45,
+    "closed_won_value_total": "\u20b919,913,400.0",
+    "closed_lost_deals_total": 17,
+    "closed_lost_value_total": "\u20b95,085,000.0"
+  },
+  "pipeline_funnel": {
+    "Lead Dropped": 9,
+    "Followup For Demo": 36,
+    "Asked to Call Back": 15,
+    "Not Contacted": 9,
+    "Demo Done": 8,
+    "Contacted": 36,
+    "Not Picked 1": 80,
+    "Not Qualified Lead": 28,
+    "Not Picked 3": 4,
+    "Junk Lead": 37,
+    "Demo Scheduled": 8,
+    "Awaiting Electric Plan": 68,
+    "Closed Won": 45,
+    "Negotiation/Review": 14,
+    "Not Picked 2": 9,
+    "Walkthrough Completed": 19,
+    "Closed Lost": 17,
+    "Closed and Advance Pending": 5,
+    "Proposal Shared": 35
+  },
+  "source_breakdown": {
+    "Architect / Team Member": 1,
+    "Architect Referral": 1,
+    "Customer Referral": 1,
+    "Exotel": 2,
+    "Facebook Ads": 16,
+    "Google_Ads": 1,
+    "Interior Designer Referral": 1,
+    "Unknown": 1,
+    "Walk In": 1
+  },
+  "source_quality_matrix": {
+    "Unknown": {
+      "total_leads": 1,
+      "junk_or_unqualified": 1,
+      "in_pipeline": 0,
+      "junk_pct": "100%"
+    },
+    "Interior Designer Referral": {
+      "total_leads": 1,
+      "junk_or_unqualified": 0,
+      "in_pipeline": 1,
+      "junk_pct": "0%"
+    },
+    "Architect / Team Member": {
+      "total_leads": 1,
+      "junk_or_unqualified": 0,
+      "in_pipeline": 1,
+      "junk_pct": "0%"
+    },
+    "Customer Referral": {
+      "total_leads": 1,
+      "junk_or_unqualified": 0,
+      "in_pipeline": 1,
+      "junk_pct": "0%"
+    },
+    "Facebook Ads": {
+      "total_leads": 16,
+      "junk_or_unqualified": 1,
+      "in_pipeline": 15,
+      "junk_pct": "6%"
+    },
+    "Google_Ads": {
+      "total_leads": 1,
+      "junk_or_unqualified": 0,
+      "in_pipeline": 1,
+      "junk_pct": "0%"
+    },
+    "Exotel": {
+      "total_leads": 2,
+      "junk_or_unqualified": 2,
+      "in_pipeline": 0,
+      "junk_pct": "100%"
+    }
+  },
+  "rep_pipeline_matrix": {
+    "Kushal Kalambi": {
+      "active_leads": 465,
+      "total_pipeline_value": 82862200.0
+    }
+  },
+  "anomalies_detected_by_math": [
+    "Historical database initialized. Incremental syncs logic tracking active."
+  ]
+}
+Generating AI Report...
+
+---------------- REPORT ----------------
+<DASHBOARD_REPORT>
+### 1. The Daily Pulse
+Yesterday's lead volume was 23, a +21% change from the 7-day average. New pipeline generated today is ₹59,800, bringing total open pipeline to ₹82,862,240. Total Closed Won stands at 45 deals (₹19,913,400), and Closed Lost stands at 17 deals (₹5,085,000).
+
+### 2. Deep Dive Diagnostics
+*OVERLOADED* rep Kushal Kalambi has 465 active leads and ₹82862200 pipeline value.
+Toxic channel "Junk Lead" has a junk percentage of 100% with 37 leads.
+
+### 3. Immediate Execution
+1. Reassign Kushal Kalambi to a less overloaded rep or provide additional training on lead management.
+2. Implement a quality control check for all incoming leads to reduce the number of junk leads entering the pipeline.
+</DASHBOARD_REPORT>
+
+<WHATSAPP_REPORT>
+*1. The Daily Pulse*
+- Yesterday's lead volume was 23, a +21% change from the 7-day average.
+- New pipeline generated today is ₹59,800, bringing total open pipeline to ₹82,862,240.
+- Total Closed Won stands at 45 deals (₹19,913,400), and Closed Lost stands at 17 deals (₹5,085,000).
+
+*2. Deep Dive Diagnostics*
+*OVERLOADED* rep Kushal Kalambi has 465 active leads and ₹82862200 pipeline value.
+Toxic channel "Junk Lead" has a junk percentage of 100% with 37 leads.
+
+*3. Immediate Execution*
+- Reassign Kushal Kalambi to a less overloaded rep or provide additional training on lead management.
+- Implement a quality control check for all incoming leads to reduce the number of junk leads entering the pipeline.
+</WHATSAPP_REPORT>
+----------------------------------------
